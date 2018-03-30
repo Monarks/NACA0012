@@ -1,0 +1,96 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      sampleDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+setFormat raw;
+
+surfaceFormat raw;
+
+interpolationScheme cellPoint;
+
+// Fields to sample.
+fields
+(
+	yPlus
+	y
+	p
+);
+
+sets
+(
+
+    patchSeed
+    {
+        type        patchSeed;
+        axis        xyz;
+        patches     ("cylinder");
+        // Number of points to seed. Divided amongst all processors according
+        // to fraction of patches they hold.
+        maxPoints   100;
+    }
+
+);
+
+// Surface sampling definition
+surfaces
+(
+
+    walls_constant
+    {
+        type            patch;
+        patches         ( "cylinder" );
+        // Optional: whether to leave as faces (=default) or triangulate
+        // triangulate     false;
+    }
+
+    walls_interpolated
+    {
+        type            patch;
+        patches         ( "cylinder" );
+        interpolate     true;
+        // Optional: whether to leave as faces (=default) or triangulate
+        // triangulate     false;
+    }
+
+    nearWalls_interpolated
+    {
+        // Sample cell values off patch. Does not need to be the near-wall
+        // cell, can be arbitrarily far away.
+        type            patch;
+        patches         ( "cylinder" );
+        interpolate     true;
+
+        // Optional: specify how to obtain sampling points from the patch
+        //           face centres (default is 'normal')
+        //
+        //  //- Specify distance to offset in normal direction
+        offsetMode  normal;
+        distance    0.1;
+        //
+        //  //- Specify single uniform offset
+        //  offsetMode  uniform;
+        //  offset      (0 0 0.0001);
+        //
+        //  //- Specify offset per patch face
+        //  offsetMode  nonuniform;
+        //  offsets     ((0 0 0.0001) (0 0 0.0002));
+
+        // Optional: whether to leave as faces (=default) or triangulate
+        // triangulate     false;
+    }
+
+);
+
+// *********************************************************************** //
