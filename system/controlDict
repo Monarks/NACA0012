@@ -1,0 +1,204 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.x                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pisoFoam;  //pimpleFoam
+
+//startFrom       startTime;
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1000;
+
+deltaT          0.01;
+
+writeControl    adjustableRunTime; //runTime
+/*
+adjustableRunTime
+clockTime
+cpuTime
+runTime
+timeStep
+*/
+
+writeInterval   5;
+
+/*
+secondaryWriteControl    cpuTime;
+secondaryWriteInterval   1000; 
+secondaryPurgeWrite      1; 
+*/
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           0.99;
+maxDeltaT       0.02;
+
+// ************************************************************************* //
+
+functions
+{
+
+    fieldAverage
+    {
+        type            fieldAverage;
+        functionObjectLibs ("libfieldFunctionObjects.so");
+
+        enabled         true;
+
+        writeControl   outputTime;
+
+//writeControl   timeStep;
+//writeInterval  100;
+
+//cleanRestart true;
+
+/*
+        timeStart       20;
+        timeEnd         200;
+*/
+
+        fields
+        (
+            U
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+
+            p
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+        );
+    }
+
+///////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////
+
+forces_object
+{
+	type forces;
+	functionObjectLibs ("libforces.so");
+
+        enabled         false;
+
+	//writeControl outputTime;
+	writeControl   timeStep;
+	writeInterval  1;
+
+	//// Patches to sample
+	//patches ("body1" "body2" "body3");
+	patches ("airfoil.*");
+
+	//// Name of fields
+	pName p;
+	Uname U;
+
+	//// Density
+	rho rhoInf;
+	rhoInf 1;
+
+	//// Centre of rotation
+	CofR (0 0 0);
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////
+
+forceCoeffs_object
+{
+	// rhoInf - reference density
+	// CofR - Centre of rotation
+	// dragDir - Direction of drag coefficient
+	// liftDir - Direction of lift coefficient
+	// pitchAxis - Pitching moment axis
+	// magUinf - free stream velocity magnitude
+	// lRef - reference length
+	// Aref - reference area
+	type forceCoeffs;
+	functionObjectLibs ("libforces.so");
+	//patches ("body1" "body2" "body3");
+	patches             ("airfoil.*");
+
+	pName p;
+	Uname U;
+	rho rhoInf;
+	rhoInf 1.0;
+
+	//// Dump to file
+	log true;
+
+	CofR (0 0 0);
+	liftDir (0 0 1);
+	dragDir (1 0 0);
+	pitchAxis (0 1 0);
+	magUInf 0.053;
+	lRef 1.0;  
+	Aref 1.0;         
+
+        writeControl   timeStep;
+        writeInterval  1;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////
+
+minmaxdomain
+{
+	type fieldMinMax;
+	//type banana;
+
+	functionObjectLibs ("libfieldFunctionObjects.so");
+
+	enabled true;
+
+	mode component;
+
+	writeControl timeStep;
+	writeInterval 1;
+
+	log true;
+
+	fields (p U k omega);
+      //fields (p U y);
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+};
